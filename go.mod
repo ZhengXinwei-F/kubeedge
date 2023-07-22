@@ -56,6 +56,7 @@ require (
 )
 
 require (
+	github.com/agiledragon/gomonkey v2.0.2+incompatible
 	github.com/pkg/errors v0.9.1
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v3 v3.0.1
