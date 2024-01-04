@@ -80,7 +80,7 @@ type ImagePrePullJobRequest struct {
 // ImagePrePullJobResponse is used to report status msg to cloudhub https service from each node
 type ImagePrePullJobResponse struct {
 	NodeName    string
-	State       v1alpha1.PrePullState
+	State       string
 	Reason      string
 	ImageStatus []v1alpha1.ImageStatus
 }

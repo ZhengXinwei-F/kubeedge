@@ -1,5 +1,5 @@
 /*
-Copyright 2022 The KubeEdge Authors.
+Copyright 2023 The KubeEdge Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -117,9 +117,10 @@ func (uc *UpstreamController) updateTaskStatus() {
 				continue
 			}
 			event := fsm.Event{
-				Type:     resp.Event,
-				Action:   resp.Action,
-				ErrorMsg: resp.Reason,
+				Type:            resp.Event,
+				Action:          resp.Action,
+				Msg:             resp.Reason,
+				ExternalMessage: resp.ExternalMessage,
 			}
 
 			_, err = c.ReportNodeStatus(taskID, nodeID, event)

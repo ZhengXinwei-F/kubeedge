@@ -18,6 +18,8 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	api "github.com/kubeedge/kubeedge/pkg/apis/fsm/v1alpha1"
 )
 
 // +genclient
@@ -84,6 +86,22 @@ type ImagePrePullTemplate struct {
 	// +optional
 	CheckItems []string `json:"checkItems,omitempty"`
 
+	// FailureTolerate specifies the task tolerance failure ratio.
+	// The default FailureTolerate value is 0.1.
+	// +optional
+	FailureTolerate string `json:"failureTolerate,omitempty"`
+
+	// Concurrency specifies the max number of edge nodes that can be upgraded at the same time.
+	// The default Concurrency value is 1.
+	// +optional
+	Concurrency int32 `json:"concurrency,omitempty"`
+
+	// TimeoutSeconds limits the duration of the node upgrade job.
+	// Default to 300.
+	// If set to 0, we'll use the default value 300.
+	// +optional
+	TimeoutSeconds *uint32 `json:"timeoutSeconds,omitempty"`
+
 	// ImageSecret specifies the secret for image pull if private registry used.
 	// Use {namespace}/{secretName} in format.
 	// +optional
@@ -101,25 +119,27 @@ type ImagePrePullTemplate struct {
 	RetryTimes int32 `json:"retryTimes,omitempty"`
 }
 
-// PrePullState describe the PrePullState of image prepull operation on edge nodes.
-// +kubebuilder:validation:Enum=prepulling;successful;failed
-type PrePullState string
-
-// Valid values of PrepullState
-const (
-	PrePullInitialValue PrePullState = ""
-	PrePulling          PrePullState = "prepulling"
-	PrePullSuccessful   PrePullState = "successful"
-	PrePullFailed       PrePullState = "failed"
-)
-
 // ImagePrePullJobStatus stores the status of ImagePrePullJob.
 // contains images prepull status on multiple edge nodes.
 // +kubebuilder:validation:Type=object
 type ImagePrePullJobStatus struct {
 	// State represents for the state phase of the ImagePrePullJob.
-	// There are four possible state values: "", prechecking, prepulling, successful, failed.
-	State PrePullState `json:"state,omitempty"`
+	// There are four possible state values: "", checking, pulling, successful, failed.
+	State api.State `json:"state,omitempty"`
+
+	// Event represents for the event of the ImagePrePullJob.
+	// There are three possible event values: Init, Check, Pull.
+	Event string `json:"event,omitempty"`
+
+	// Action represents for the action of the ImagePrePullJob.
+	// There are three possible action values: Success, Failure, TimeOut.
+	Action api.Action `json:"action,omitempty"`
+
+	// Reason represents for the reason of the ImagePrePullJob.
+	Reason string `json:"reason,omitempty"`
+
+	// Time represents for the running time of the ImagePrePullJob.
+	Time string `json:"time,omitempty"`
 
 	// Status contains image prepull status for each edge node.
 	Status []ImagePrePullStatus `json:"status,omitempty"`
@@ -128,16 +148,8 @@ type ImagePrePullJobStatus struct {
 // ImagePrePullStatus stores image prepull status for each edge node.
 // +kubebuilder:validation:Type=object
 type ImagePrePullStatus struct {
-	// NodeName is the name of edge node.
-	NodeName string `json:"nodeName,omitempty"`
-
-	// State represents for the state phase of the ImagePrepullJob on the edge node.
-	// There are five possible state values: "", prepulling, successful, failed.
-	State PrePullState `json:"state,omitempty"`
-
-	// Reason represents the fail reason if images prepull failed on the edge node
-	Reason string `json:"reason,omitempty"`
-
+	// Task Status
+	*TaskStatus
 	// ImageStatus represents the prepull status for each image
 	ImageStatus []ImageStatus `json:"imageStatus,omitempty"`
 }
@@ -150,7 +162,7 @@ type ImageStatus struct {
 
 	// State represents for the state phase of this image pull on the edge node
 	// There are two possible state values: successful, failed.
-	State PrePullState `json:"state,omitempty"`
+	State api.State `json:"state,omitempty"`
 
 	// Reason represents the fail reason if image pull failed
 	// +optional
